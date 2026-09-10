@@ -1,4 +1,4 @@
-# Purge 
+# Purge
 
 Declutter any device. `Purge` frees disk space by removing regenerable
 caches, logs, and build artifacts left behind by common developer tools — while
