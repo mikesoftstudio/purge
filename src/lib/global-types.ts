@@ -13,11 +13,16 @@ export interface ScanCategory {
   toolMissing: boolean;
   totalSizeBytes: number;
   paths: { path: string; sizeBytes: number; exists: boolean }[];
+  /** Present in remote/guidance mode — human-readable cleanup commands. */
+  cleanupCommands?: string[];
+  /** Present in remote mode — tool that must be installed. */
+  toolRequirement?: string;
 }
 
 export interface ScanResponse {
   platform: Platform;
   platformLabel: string;
+  remote: boolean;
   results: ScanCategory[];
   totalReclaimableBytes: number;
   scannedAt: number;
@@ -42,4 +47,5 @@ export interface PlatformInfo {
   nodeVersion: string;
   home: string;
   tools: ToolInfoDto[];
+  remote?: boolean;
 }

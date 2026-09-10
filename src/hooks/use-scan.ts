@@ -9,6 +9,7 @@ export function useScan() {
   const [results, setResults] = useState<ScanCategory[] | null>(null);
   const [totalReclaimableBytes, setTotalReclaimableBytes] = useState(0);
   const [platformLabel, setPlatformLabel] = useState("");
+  const [remote, setRemote] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scannedAt, setScannedAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export function useScan() {
       setResults(data.results);
       setTotalReclaimableBytes(data.totalReclaimableBytes);
       setPlatformLabel(data.platformLabel);
+      setRemote(data.remote);
       setScannedAt(data.scannedAt);
       saveScanResults(data.results, data.platformLabel, data.totalReclaimableBytes, data.scannedAt);
     } catch (e) {
@@ -37,6 +39,7 @@ export function useScan() {
     results,
     totalReclaimableBytes,
     platformLabel,
+    remote,
     scanning,
     scannedAt,
     error,

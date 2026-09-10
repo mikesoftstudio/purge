@@ -55,7 +55,7 @@ function applyFilters(
 
 export default function ScanPage() {
   const router = useRouter();
-  const { results, totalReclaimableBytes, platformLabel, scanning, error, scan } = useScan();
+  const { results, totalReclaimableBytes, platformLabel, remote, scanning, error, scan } = useScan();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [rescanOpen, setRescanOpen] = useState(false);
@@ -121,7 +121,9 @@ export default function ScanPage() {
     return (
       <div className="space-y-4">
         <h1 className="text-3xl font-bold tracking-tight">Scanning your {platformLabel}…</h1>
-        <p className="text-muted-foreground">Measuring every tool cache. This only reads — nothing is deleted.</p>
+        <p className="text-muted-foreground">
+          {remote ? "Loading cache categories for your platform…" : "Measuring every tool cache. This only reads — nothing is deleted."}
+        </p>
         <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
           <div className="h-full w-1/3 animate-pulse rounded-full bg-primary" />
         </div>
@@ -140,7 +142,7 @@ export default function ScanPage() {
           open
           onClose={() => void scan()}
           onConfirm={() => void scan()}
-          title="Couldn’t finish the scan"
+          title="Couldn't finish the scan"
           description={error}
           confirmLabel="Try again"
           hideCancel
@@ -165,11 +167,22 @@ export default function ScanPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {remote && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
+          <p className="font-semibold">Guidance Mode</p>
+          <p className="mt-1 text-xs">
+            Purge is running on a remote server and can&apos;t access your local filesystem.
+            Below are the standard cache locations for <span className="font-medium">{platformLabel}</span> — use the terminal commands to clean them manually.
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Scan results</h1>
           <p className="text-muted-foreground">
-            {platformLabel} · {formatBytes(totalReclaimableBytes)} reclaimable total
+            {platformLabel}{" "}
+            {remote ? `· ${totalCount} cache categories found` : `· ${formatBytes(totalReclaimableBytes)} reclaimable total`}
           </p>
         </div>
         <Button variant="outline" onClick={requestRescan} disabled={scanning}>
@@ -211,52 +224,56 @@ export default function ScanPage() {
             ))}
           </div>
 
-          <div className="flex gap-1" role="radiogroup" aria-label="Detection filter">
-            {([
-              ["all", "All"],
-              ["detected", "Detected"],
-              ["not-detected", "Empty"],
-            ] as const).map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                role="radio"
-                aria-checked={filterStatus === value}
-                onClick={() => setFilterStatus(value)}
-                className={cn(
-                  "inline-flex h-8 items-center rounded-md px-2.5 text-xs font-medium transition-colors",
-                  filterStatus === value
-                    ? "bg-primary text-primary-foreground"
-                    : "border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={selectAll}>
-            Select all
-          </Button>
-          <Button variant="ghost" size="sm" onClick={clearAll}>
-            Clear
-          </Button>
-          <div className="flex-1" />
-          <span className="text-xs text-muted-foreground">
-            {resultCount}{resultCount !== totalCount ? ` of ${totalCount}` : ""} categories
-          </span>
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="text-xs font-medium text-primary hover:underline"
-            >
-              Reset filters
-            </button>
+          {!remote && (
+            <div className="flex gap-1" role="radiogroup" aria-label="Detection filter">
+              {([
+                ["all", "All"],
+                ["detected", "Detected"],
+                ["not-detected", "Empty"],
+              ] as const).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={filterStatus === value}
+                  onClick={() => setFilterStatus(value)}
+                  className={cn(
+                    "inline-flex h-8 items-center rounded-md px-2.5 text-xs font-medium transition-colors",
+                    filterStatus === value
+                      ? "bg-primary text-primary-foreground"
+                      : "border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           )}
         </div>
+
+        {!remote && (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" size="sm" onClick={selectAll}>
+              Select all
+            </Button>
+            <Button variant="ghost" size="sm" onClick={clearAll}>
+              Clear
+            </Button>
+            <div className="flex-1" />
+            <span className="text-xs text-muted-foreground">
+              {resultCount}{resultCount !== totalCount ? ` of ${totalCount}` : ""} categories
+            </span>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -273,27 +290,45 @@ export default function ScanPage() {
             selected={selected.has(category.id)}
             onToggle={toggle}
             onDetails={setDetail}
+            remote={remote}
           />
         ))}
       </div>
 
-      <div className="sticky bottom-24 sm:bottom-4">
-        <Card className="border-primary/30 bg-background/90 backdrop-blur">
-          <CardHeader>
-            <CardTitle className="text-base">
-              {selected.size} selected · {formatBytes(selectedBytes)} will be freed
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-3">
-            <Button size="lg" disabled={selected.size === 0} className="flex-1 sm:flex-none" onClick={() => setConfirmOpen(true)}>
-              Clean selected
-            </Button>
-            <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-              Back to dashboard
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      {!remote && (
+        <div className="sticky bottom-24 sm:bottom-4">
+          <Card className="border-primary/30 bg-background/90 backdrop-blur">
+            <CardHeader>
+              <CardTitle className="text-base">
+                {selected.size} selected · {formatBytes(selectedBytes)} will be freed
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-3">
+              <Button size="lg" disabled={selected.size === 0} className="flex-1 sm:flex-none" onClick={() => setConfirmOpen(true)}>
+                Clean selected
+              </Button>
+              <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+                Back to dashboard
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {remote && (
+        <div className="sticky bottom-24 sm:bottom-4">
+          <Card className="border-primary/30 bg-background/90 backdrop-blur">
+            <CardContent className="flex flex-wrap items-center gap-3 py-4">
+              <p className="text-sm text-muted-foreground">
+                Run these commands in your terminal to clean the caches above.
+              </p>
+              <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
+                Back to dashboard
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <ConfirmDialog
         open={confirmOpen}
@@ -349,14 +384,15 @@ export default function ScanPage() {
         open={detail !== null}
         onClose={() => setDetail(null)}
         onConfirm={() => {
-          if (detail) toggle(detail.id);
+          if (detail && !remote) toggle(detail.id);
           setDetail(null);
         }}
         title={detail?.name ?? ""}
         description={detail?.description}
-        confirmLabel={detail && selected.has(detail.id) ? "Deselect" : "Select"}
-        cancelLabel="Close"
+        confirmLabel={remote ? "Close" : detail && selected.has(detail.id) ? "Deselect" : "Select"}
+        cancelLabel={remote ? undefined : "Close"}
         confirmDisabled={
+          !remote &&
           !!detail &&
           !selected.has(detail.id) &&
           (!detail.applicable || (!detail.detected && detail.totalSizeBytes === 0))
@@ -364,24 +400,43 @@ export default function ScanPage() {
       >
         {detail && (
           <div className="space-y-3">
-            <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2">
-              <span className="text-sm text-muted-foreground">Reclaimable</span>
-              <span className="text-lg font-semibold">{formatBytes(detail.totalSizeBytes)}</span>
-            </div>
+            {!remote && (
+              <div className="flex items-center justify-between rounded-lg bg-muted px-3 py-2">
+                <span className="text-sm text-muted-foreground">Reclaimable</span>
+                <span className="text-lg font-semibold">{formatBytes(detail.totalSizeBytes)}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <SafetyBadge tier={detail.safety} />
               <span className="text-xs text-muted-foreground">Trade-off: {detail.tradeoff}</span>
             </div>
-            {detail.paths.filter((p) => p.exists).length > 0 && (
-              <ul className="max-h-32 space-y-1 overflow-y-auto font-mono text-[11px] text-muted-foreground">
-                {detail.paths
-                  .filter((p) => p.exists)
-                  .map((p) => (
-                    <li key={p.path} className="truncate rounded bg-muted px-2 py-1">
-                      {p.path}
+            {detail.paths.filter((p) => remote || p.exists).length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">
+                  {remote ? "Standard cache paths:" : "Existing paths:"}
+                </p>
+                <ul className="max-h-32 space-y-1 overflow-y-auto font-mono text-[11px] text-muted-foreground">
+                  {detail.paths
+                    .filter((p) => remote || p.exists)
+                    .map((p) => (
+                      <li key={p.path} className="truncate rounded bg-muted px-2 py-1">
+                        {p.path}
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
+            {remote && detail.cleanupCommands && detail.cleanupCommands.length > 0 && (
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Cleanup commands:</p>
+                <ul className="space-y-1">
+                  {detail.cleanupCommands.map((cmd) => (
+                    <li key={cmd} className="font-mono text-[11px] text-muted-foreground rounded bg-muted px-2 py-1">
+                      {cmd}
                     </li>
                   ))}
-              </ul>
+                </ul>
+              </div>
             )}
           </div>
         )}

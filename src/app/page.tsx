@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
 import { useDisk } from "@/hooks/use-disk";
 import { usePlatform } from "@/hooks/use-platform";
-import { useScan } from "@/hooks/use-scan";
+import { useBrowserStorage } from "@/hooks/use-browser-storage";
 import { deviceNoun } from "@/lib/platform-meta";
 import { formatBytes } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,16 +11,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DiskOverview } from "@/components/disk-overview";
 
 export default function DashboardPage() {
-  const { disk } = useDisk();
+  const { disk, remote } = useDisk();
   const { info } = usePlatform();
-  const { scan, results, totalReclaimableBytes, scanning } = useScan();
+  const { estimate } = useBrowserStorage();
 
-  useEffect(() => {
-    if (!results) void scan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const noun = info ? deviceNoun(info.platform) : "device";
 
-  const noun = info ? deviceNoun(info.platform) : "device"; 
+  const browserDisk = estimate
+    ? {
+        totalBytes: estimate.quota,
+        usedBytes: estimate.usage,
+        freeBytes: Math.max(0, estimate.quota - estimate.usage),
+        home: "~",
+        filesystem: "browser",
+      }
+    : null;
+
+  const showDisk = remote ? browserDisk : disk;
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -30,19 +36,24 @@ export default function DashboardPage() {
           Free disk space on your {noun}
         </h1>
         <p className="max-w-2xl text-muted-foreground">
-          Purge safely removes regenerable caches, logs and build artifacts left behind by your
-          development tools. It never touches your projects, source code, or personal files.
+          {remote
+            ? `Purge detected you're on ${info?.platformLabel ?? "your device"}. Below are the standard cache locations — use the terminal to clean them safely.`
+            : "Purge safely removes regenerable caches, logs and build artifacts left behind by your development tools. It never touches your projects, source code, or personal files."}
         </p>
       </section>
 
-      {disk && (
+      {showDisk && showDisk.totalBytes > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Storage</CardTitle>
-            <CardDescription>Current state of the volume containing your home directory.</CardDescription>
+            <CardTitle>{remote ? "Browser Storage" : "Storage"}</CardTitle>
+            <CardDescription>
+              {remote
+                ? "Storage available to this browser tab (full disk info requires running Purge locally)."
+                : "Current state of the volume containing your home directory."}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <DiskOverview disk={disk} reclaimableBytes={totalReclaimableBytes || undefined} />
+            <DiskOverview disk={showDisk} />
           </CardContent>
         </Card>
       )}
@@ -50,15 +61,16 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Scan now</CardTitle>
+            <CardTitle>{remote ? "View cache categories" : "Scan now"}</CardTitle>
             <CardDescription>
-              Detect {info?.platformLabel.toLowerCase() ?? "this device"}s' installed tools and measure how much
-              space their caches are using.
+              {remote
+                ? `See which caches exist on ${info?.platformLabel ?? "your platform"} and how to clean them.`
+                : `Detect ${info?.platformLabel.toLowerCase() ?? "this device"}s' installed tools and measure how much space their caches are using.`}
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap items-center gap-3">
             <Button asChild size="lg">
-              <Link href="/scan">Scan my {noun}</Link>
+              <Link href="/scan">{remote ? `Browse ${noun} caches` : `Scan my ${noun}`}</Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/scan">See what it finds</Link>
@@ -68,17 +80,19 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{scanning ? "Scanning…" : results ? "Last scan" : ""}</CardTitle>
+            <CardTitle>{info?.platformLabel ?? "Device"}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {scanning && <p className="text-sm text-muted-foreground">Measuring cache sizes…</p>}
-            {!scanning && results && (
+            {info && (
               <>
-                <p className="text-3xl font-bold tracking-tight">{formatBytes(totalReclaimableBytes)}</p>
-                <p className="text-sm text-muted-foreground">reclaimable across {results.filter((r) => r.detected).length} categories</p>
+                <p className="text-sm text-muted-foreground">
+                  {remote ? "Running in guidance mode" : "Connected locally"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {info.platformLabel}{info.nodeVersion ? ` · Node ${info.nodeVersion}` : ""}
+                </p>
               </>
             )}
-            {!scanning && !results && <p className="text-sm text-muted-foreground">No scan yet.</p>}
           </CardContent>
         </Card>
       </div>
