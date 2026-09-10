@@ -28,3 +28,7 @@ next-env.d.ts
 
 # logs
 *.log
+
+# electron build output
+/release
+/dist-electron

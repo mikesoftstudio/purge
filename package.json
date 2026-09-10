@@ -3,26 +3,71 @@
   "version": "0.1.0",
   "private": true,
   "description": "Purge — free disk space on any device by clearing regenerable caches, logs, and build artifacts.",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "smoke": "node scripts/smoke-test.mjs"
+    "smoke": "node scripts/smoke-test.mjs",
+    "electron:dev": "concurrently -k \"next dev\" \"wait-on http://127.0.0.1:3000 && cross-env PURGE_DEV_URL=http://127.0.0.1:3000 electron electron/main.cjs\"",
+    "electron:build": "npm run build && electron-builder",
+    "dist": "npm run build && electron-builder --mac --win --linux"
+  },
+  "build": {
+    "appId": "dev.purge.app",
+    "productName": "Purge",
+    "asar": false,
+    "files": [
+      "electron/main.cjs",
+      "node_modules/**/*",
+      ".next/**/*",
+      "public/**/*",
+      "package.json",
+      "next.config.ts"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    }
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3",
     "next": "^15.3.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@types/electron": "^1.4.38",
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "autoprefixer": "^10.4.21",
+    "concurrently": "^9.2.4",
+    "cross-env": "^7.0.3",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wait-on": "^8.0.5"
   }
 }
