@@ -106,6 +106,22 @@ export default function DashboardPage() {
             <code className="rounded bg-muted px-1 text-xs">/</code> or your home directory.</li>
         </ul>
       </section>
+
+      {remote && (
+        <section className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-6">
+          <h2 className="text-lg font-semibold text-amber-700 dark:text-amber-400">Run Purge locally for full power</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            The Vercel deployment can&apos;t access your hard disk. To scan and clean your real storage, run Purge on your machine:
+          </p>
+          <pre className="mt-3 rounded-lg bg-background/80 px-4 py-3 font-mono text-xs">
+            git clone https://github.com/mikesoftstudio/purge.git<br/>
+            cd purge &amp;&amp; npm install &amp;&amp; npm run dev
+          </pre>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Then open <span className="font-medium">localhost:3000</span> — Purge will detect your OS and clean your actual disk.
+          </p>
+        </section>
+      )}
     </div>
   );
 }

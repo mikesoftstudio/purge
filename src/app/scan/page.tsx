@@ -169,10 +169,17 @@ export default function ScanPage() {
     <div className="space-y-6 animate-fade-in">
       {remote && (
         <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-400">
-          <p className="font-semibold">Guidance Mode</p>
+          <p className="font-semibold">Run Purge locally to clean your disk</p>
           <p className="mt-1 text-xs">
-            Purge is running on a remote server and can&apos;t access your local filesystem.
-            Below are the standard cache locations for <span className="font-medium">{platformLabel}</span> — use the terminal commands to clean them manually.
+            Purge is running on a remote server and cannot access your hard disk.
+            To scan and clean your actual storage, run Purge on your machine:
+          </p>
+          <pre className="mt-2 rounded bg-background/80 px-3 py-2 font-mono text-xs">
+            git clone https://github.com/mikesoftstudio/purge.git<br/>
+            cd purge &amp;&amp; npm install &amp;&amp; npm run dev
+          </pre>
+          <p className="mt-1 text-xs">
+            Then open <span className="font-medium">localhost:3000</span> — Purge will detect your OS and scan your real disk.
           </p>
         </div>
       )}
@@ -317,14 +324,14 @@ export default function ScanPage() {
 
       {remote && (
         <div className="sticky bottom-24 sm:bottom-4">
-          <Card className="border-primary/30 bg-background/90 backdrop-blur">
-            <CardContent className="flex flex-wrap items-center gap-3 py-4">
+          <Card className="border-amber-500/30 bg-background/90 backdrop-blur">
+            <CardContent className="flex flex-col gap-3 py-4">
               <p className="text-sm text-muted-foreground">
-                Run these commands in your terminal to clean the caches above.
+                To actually clean these caches, run Purge on your machine — the deployed version can only show you what to clean.
               </p>
-              <Link href="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-                Back to dashboard
-              </Link>
+              <code className="rounded-lg bg-muted px-3 py-2 font-mono text-xs">
+                git clone https://github.com/mikesoftstudio/purge.git &amp;&amp; cd purge &amp;&amp; npm install &amp;&amp; npm run dev
+              </code>
             </CardContent>
           </Card>
         </div>
