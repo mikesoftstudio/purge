@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { detectClientPlatform } from "@/lib/client-platform";
 import { ScanCategory, ScanResponse } from "@/lib/global-types";
 import { saveScanResults } from "@/lib/scan-store";
 
@@ -16,7 +17,8 @@ export function useScan() {
     setScanning(true);
     setError(null);
     try {
-      const res = await fetch("/api/scan");
+      const clientPlatform = detectClientPlatform();
+      const res = await fetch(`/api/scan?platform=${clientPlatform}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: ScanResponse = await res.json();
       setResults(data.results);

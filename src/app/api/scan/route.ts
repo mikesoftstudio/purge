@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
 import { categoriesForPlatform, detectPlatform, scanCategories, platformLabel } from "@/lib/engine";
+import { type Platform } from "@/lib/engine/types";
+
+const VALID_PLATFORMS = new Set<Platform>(["macos", "linux", "windows", "android", "ios"]);
+
+function resolvePlatform(searchParams: URLSearchParams): Platform {
+  const raw = searchParams.get("platform");
+  if (raw && VALID_PLATFORMS.has(raw as Platform)) return raw as Platform;
+  return detectPlatform();
+}
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const platform = detectPlatform();
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const platform = resolvePlatform(searchParams);
   const results = await scanCategories(categoriesForPlatform(platform));
 
   const serialized = results.map((r) => ({

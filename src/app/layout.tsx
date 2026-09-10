@@ -13,7 +13,7 @@ const sora = Sora({
   display: "swap",
 });
 
-const SITE_URL = "https://purge.dev";
+const SITE_URL = "https://purgee.vercel.app";
 const TITLE = "Purge — Free disk space safely";
 const DESCRIPTION =
   "Scan your device for regenerable caches, build artifacts and logs, then clean them in one click. Never touches your source code or personal files.";
