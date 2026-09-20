@@ -5,17 +5,74 @@ import '../engine/categories.dart';
 import '../engine/types.dart';
 import '../state/purge_controller.dart';
 import '../theme.dart';
+import '../ui/strings.dart';
 import '../widgets/disk_overview.dart';
+
+class DashboardStrings {
+  DashboardStrings._();
+
+  static const heroPrefix = 'Reclaim space on your ';
+  static const heroBody = 'Purge safely removes regenerable caches, logs and build artifacts '
+      'left behind by your development tools. Your projects, source code '
+      'and personal files stay untouched.';
+  static const scanMy = 'Scan my ';
+  static const recentlyFreedPrefix = 'You recently freed ';
+  static const recentlyFreedSuffix =
+      '. Everything regenerates on next use — a quick scan keeps it tidy.';
+  static const storage = 'Storage';
+  static const storageSubMulti =
+      'free space on the volume holding your home — every mount listed below';
+  static const storageSubSingle = 'on the volume holding your home directory';
+  static const volumes = 'Volumes';
+  static const home = 'home';
+  static const of = ' of ';
+  static const safeToReclaimPrefix = 'safe to reclaim across ';
+  static const itemSingular = ' item';
+  static const itemPlural = ' items';
+  static const reviewAndClean = 'Review & clean';
+  static const cleanRecommended = 'Clean recommended';
+  static const largestOnMac = 'Largest finds on ';
+  static const macOS = 'macOS';
+  static const thisMac = 'this Mac';
+  static const thisDevice = 'this device';
+  static const seeAllPrefix = 'See all ';
+  static const seeAllSuffix = ' items';
+  static const howItStaysSafe = 'How it stays safe';
+  static const safeForEveryone =
+      'Designed for everyone — from first-time users to command-line veterans.';
+  static const readOnlyScan = 'Read-only scan';
+  static const readOnlyScanBody =
+      'A scan only measures. Nothing is deleted until you confirm it.';
+  static const regenerableCaches = 'Regenerable caches';
+  static const regenerableCachesBody =
+      'Everything Purge removes is a cache, log or build artifact — never your '
+      'projects or personal files.';
+  static const guardedDeletion = 'Guarded deletion';
+  static const guardedDeletionBody =
+      'Dangerous paths like your home directory and system roots are validated and rejected.';
+  static const deviceDetails = 'Device details';
+  static const techSubtitle = 'For power users — platform, paths and scan coverage.';
+  static const emDash = '—';
+  static const platform = 'Platform';
+  static const systemVolume = 'System volume';
+  static const homeLabel = 'Home';
+  static const tempLabel = 'Temp';
+  static const dataDir = 'Data dir';
+  static const categoriesLabel = 'Categories';
+  static const coveredSuffix = ' covered on ';
+}
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({
     super.key,
     required this.controller,
     required this.onScan,
+    required this.onCleanRecommended,
   });
 
   final PurgeController controller;
   final VoidCallback onScan;
+  final ValueChanged<BuildContext> onCleanRecommended;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +106,10 @@ class DashboardScreen extends StatelessWidget {
             totalBytes: controller.totalReclaimableBytes,
             platformName: controller.platformName,
             onScan: onScan,
+            onCleanRecommended: detected
+                    .any((r) => r.applicable && r.safety != SafetyTier.advanced)
+                ? onCleanRecommended
+                : null,
           ),
         ],
         const SizedBox(height: 16),
@@ -77,7 +138,7 @@ class _Hero extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Reclaim space on your ${controller.noun}',
+          '${DashboardStrings.heroPrefix}${controller.noun}',
           style: Theme.of(context)
               .textTheme
               .headlineMedium
@@ -85,9 +146,7 @@ class _Hero extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'Purge safely removes regenerable caches, logs and build artifacts '
-          'left behind by your development tools. Your projects, source code '
-          'and personal files stay untouched.',
+          DashboardStrings.heroBody,
           style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 15, height: 1.45),
         ),
       ],
@@ -100,7 +159,7 @@ class _Hero extends StatelessWidget {
         textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
       ),
       icon: const Icon(Icons.radar),
-      label: Text('Scan my ${controller.noun}'),
+      label: Text('${DashboardStrings.scanMy}${controller.noun}'),
     );
 
     return Container(
@@ -174,14 +233,12 @@ class _RecentlyFreed extends StatelessWidget {
             child: Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(text: 'You recently freed '),
+                  const TextSpan(text: DashboardStrings.recentlyFreedPrefix),
                   TextSpan(
                     text: formatBytes(bytes),
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
-                  const TextSpan(
-                    text: '. Everything regenerates on next use — a quick scan keeps it tidy.',
-                  ),
+                  const TextSpan(text: DashboardStrings.recentlyFreedSuffix),
                 ],
               ),
               style: TextStyle(color: scheme.onSurface, height: 1.4),
@@ -214,15 +271,15 @@ class _StorageCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Storage',
+                  DashboardStrings.storage,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: scheme.onSurface),
                 ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     volumes.length > 1
-                        ? 'free space on the volume holding your home — every mount listed below'
-                        : 'on the volume holding your home directory',
+                        ? DashboardStrings.storageSubMulti
+                        : DashboardStrings.storageSubSingle,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5),
                   ),
@@ -261,7 +318,7 @@ class _VolumeList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Volumes',
+          DashboardStrings.volumes,
           style: TextStyle(
             fontSize: 12.5,
             fontWeight: FontWeight.w600,
@@ -322,13 +379,13 @@ class VolumeRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  'home',
+                  DashboardStrings.home,
                   style: TextStyle(fontSize: 10, color: purgeGreenDark),
                 ),
               ),
             ],
             Text(
-              '${formatBytesShort(volume.usedBytes)} of ${formatBytesShort(volume.totalBytes)}',
+              '${formatBytesShort(volume.usedBytes)}${DashboardStrings.of}${formatBytesShort(volume.totalBytes)}',
               style: TextStyle(
                 color: scheme.onSurfaceVariant,
                 fontSize: 12,
@@ -367,12 +424,14 @@ class _LastScanCard extends StatelessWidget {
     required this.totalBytes,
     required this.platformName,
     required this.onScan,
+    this.onCleanRecommended,
   });
 
   final List<ScanResult> results;
   final int totalBytes;
   final String platformName;
   final VoidCallback onScan;
+  final ValueChanged<BuildContext>? onCleanRecommended;
 
   @override
   Widget build(BuildContext context) {
@@ -401,15 +460,23 @@ class _LastScanCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'safe to reclaim across ${results.length} categorie${results.length == 1 ? 'y' : 's'}',
+            '${DashboardStrings.safeToReclaimPrefix}${results.length}${results.length == 1 ? DashboardStrings.itemSingular : DashboardStrings.itemPlural}',
             style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13),
           ),
           const SizedBox(height: 14),
           FilledButton.icon(
             onPressed: onScan,
             icon: const Icon(Icons.delete_sweep_outlined),
-            label: const Text('Review & clean'),
+            label: const Text(DashboardStrings.reviewAndClean),
           ),
+          if (onCleanRecommended != null) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => onCleanRecommended!(context),
+              icon: const Icon(Icons.auto_fix_high),
+              label: const Text(DashboardStrings.cleanRecommended),
+            ),
+          ],
         ],
       ),
     );
@@ -418,7 +485,7 @@ class _LastScanCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Largest finds on ${platformName == 'macOS' ? 'this Mac' : 'this device'}',
+          '${DashboardStrings.largestOnMac}${platformName == DashboardStrings.macOS ? DashboardStrings.thisMac : DashboardStrings.thisDevice}',
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
         const SizedBox(height: 12),
@@ -430,7 +497,7 @@ class _LastScanCard extends StatelessWidget {
         if (results.length > 3)
           TextButton(
             onPressed: onScan,
-            child: Text('See all ${results.length} categories'),
+            child: Text('${DashboardStrings.seeAllPrefix}${results.length}${DashboardStrings.seeAllSuffix}'),
           ),
       ],
     );
@@ -517,18 +584,18 @@ class _SafetySection extends StatelessWidget {
     final features = [
       (
         Icons.visibility_outlined,
-        'Read-only scan',
-        'A scan only measures. Nothing is deleted until you confirm it.',
+        DashboardStrings.readOnlyScan,
+        DashboardStrings.readOnlyScanBody,
       ),
       (
         Icons.refresh_outlined,
-        'Regenerable caches',
-        'Everything Purge removes is a cache, log or build artifact — never your projects or personal files.',
+        DashboardStrings.regenerableCaches,
+        DashboardStrings.regenerableCachesBody,
       ),
       (
         Icons.shield_outlined,
-        'Guarded deletion',
-        'Dangerous paths like your home directory and system roots are validated and rejected.',
+        DashboardStrings.guardedDeletion,
+        DashboardStrings.guardedDeletionBody,
       ),
     ];
 
@@ -539,12 +606,12 @@ class _SafetySection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'How it stays safe',
+              DashboardStrings.howItStaysSafe,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             Text(
-              'Designed for everyone — from first-time users to command-line veterans.',
+              DashboardStrings.safeForEveryone,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 13,
@@ -665,10 +732,13 @@ class _TechDetails extends StatelessWidget {
             ),
             Expanded(
               child: Text(
-                value.isEmpty ? '—' : value,
+                value.isEmpty ? DashboardStrings.emDash : value,
                 style: TextStyle(
                   fontSize: 12.5,
-                  fontFamily: label == 'Home' || label == 'Temp' ? 'monospace' : null,
+                  fontFamily: label == DashboardStrings.homeLabel ||
+                          label == DashboardStrings.tempLabel
+                      ? Strings.monospace
+                      : null,
                 ),
               ),
             ),
@@ -684,22 +754,27 @@ class _TechDetails extends StatelessWidget {
         childrenPadding: const EdgeInsets.fromLTRB(22, 0, 22, 18),
         leading: Icon(Icons.terminal_outlined, color: scheme.onSurfaceVariant),
         title: const Text(
-          'Device details',
+          DashboardStrings.deviceDetails,
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
         ),
         subtitle: Text(
-          'For power users — platform, paths and scan coverage.',
+          DashboardStrings.techSubtitle,
           style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12.5),
         ),
         children: [
           const Divider(height: 24),
-          row('Platform', controller.platformName),
-          row('System volume', controller.disk.filesystem == 'unknown' ? '—' : controller.disk.filesystem),
-          row('Volumes', controller.disk.volumes.isEmpty ? '—' : '${controller.disk.volumes.length}'),
-          row('Home', env?.home ?? ''),
-          row('Temp', env?.tempDir ?? ''),
-          row('Data dir', env?.localAppData ?? ''),
-          row('Categories', '${categoriesForPlatform(controller.platform).length} covered on ${controller.platformName}'),
+          row(DashboardStrings.platform, controller.platformName),
+          row(DashboardStrings.systemVolume,
+              controller.disk.filesystem == 'unknown' ? DashboardStrings.emDash : controller.disk.filesystem),
+          row(DashboardStrings.volumes,
+              controller.disk.volumes.isEmpty ? DashboardStrings.emDash : '${controller.disk.volumes.length}'),
+          row(DashboardStrings.homeLabel, env?.home ?? ''),
+          row(DashboardStrings.tempLabel, env?.tempDir ?? ''),
+          row(DashboardStrings.dataDir, env?.localAppData ?? ''),
+          row(
+            DashboardStrings.categoriesLabel,
+            '${categoriesForPlatform(controller.platform).length}${DashboardStrings.coveredSuffix}${controller.platformName}',
+          ),
         ],
       ),
     );

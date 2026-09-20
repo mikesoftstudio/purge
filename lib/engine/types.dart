@@ -2,6 +2,26 @@ enum AppPlatform { macos, linux, windows, android, ios }
 
 enum SafetyTier { safe, moderate, advanced }
 
+enum CategoryKind { caches, files }
+
+enum EntryKind { file, directory }
+
+class ScanEntry {
+  const ScanEntry({
+    required this.path,
+    required this.name,
+    required this.sizeBytes,
+    required this.kind,
+  });
+
+  final String path;
+  final String name;
+  final int sizeBytes;
+  final EntryKind kind;
+
+  String get id => path;
+}
+
 enum CategoryStatus { detected, skipped, cleaning, done, cancelled, error }
 
 class CleanCommand {
@@ -37,6 +57,10 @@ class HostEnv {
 
   bool get isWindows => platform == AppPlatform.windows;
   bool get isMacos => platform == AppPlatform.macos;
+  bool get isDesktop =>
+      platform == AppPlatform.macos ||
+      platform == AppPlatform.linux ||
+      platform == AppPlatform.windows;
 }
 
 class CategoryDefinition {
@@ -53,6 +77,8 @@ class CategoryDefinition {
     required this.cleanCommands,
     this.onFailureCommands,
     this.skipReason,
+    this.kind = CategoryKind.caches,
+    this.perPath = false,
   });
 
   final String id;
@@ -67,6 +93,11 @@ class CategoryDefinition {
   final List<CleanCommand> Function(HostEnv env) cleanCommands;
   final List<CleanCommand> Function(HostEnv env)? onFailureCommands;
   final Future<String?> Function(HostEnv env)? skipReason;
+  final CategoryKind kind;
+
+  /// When true, each path from [getPaths] becomes its own [ScanResult]
+  /// (a card per file/folder) instead of being summed into one result.
+  final bool perPath;
 }
 
 class PathSize {
@@ -89,6 +120,7 @@ class ScanResult {
     required this.applicable,
     required this.detected,
     this.toolMissing = false,
+    this.scanHint,
   });
 
   final CategoryDefinition category;
@@ -97,6 +129,7 @@ class ScanResult {
   final bool applicable;
   final bool detected;
   final bool toolMissing;
+  final String? scanHint;
 
   String get id => category.id;
   String get name => category.name;
@@ -165,12 +198,19 @@ class CleanProgressEvent {
     required this.status,
     this.label,
     this.freedBytes,
+    this.done,
+    this.total,
   });
 
   final String categoryId;
   final String status;
   final String? label;
   final int? freedBytes;
+
+  /// Global progress units (completed / total) when this event was emitted,
+  /// so the UI can render a gradual bar instead of jumping per category.
+  final int? done;
+  final int? total;
 }
 
 class CleanSummary {

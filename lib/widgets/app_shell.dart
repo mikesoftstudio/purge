@@ -4,6 +4,16 @@ import '../engine/types.dart';
 import '../state/purge_controller.dart';
 import '../theme.dart';
 
+class AppShellStrings {
+  AppShellStrings._();
+
+  static const mark = '◆';
+  static const appName = 'Purge';
+  static const dashboard = 'Dashboard';
+  static const scan = 'Scan';
+  static const toggleTheme = 'Toggle theme';
+}
+
 class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
@@ -44,19 +54,21 @@ class AppShell extends StatelessWidget {
                 color: purgeGreen,
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Text('◆', style: TextStyle(color: Colors.white, fontSize: 12)),
+              child: const Text(AppShellStrings.mark,
+                  style: TextStyle(color: Colors.white, fontSize: 12)),
             ),
             const SizedBox(width: 8),
-            const Text('Purge', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text(AppShellStrings.appName,
+                style: TextStyle(fontWeight: FontWeight.w700)),
             if (showTopNav) ...[
               const SizedBox(width: 24),
               _NavButton(
-                label: 'Dashboard',
+                label: AppShellStrings.dashboard,
                 selected: index == 0,
                 onTap: () => onIndex(0),
               ),
               _NavButton(
-                label: 'Scan',
+                label: AppShellStrings.scan,
                 selected: index == 1,
                 onTap: () => onIndex(1),
               ),
@@ -80,7 +92,7 @@ class AppShell extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Toggle theme',
+            tooltip: AppShellStrings.toggleTheme,
             onPressed: controller.cycleTheme,
             icon: Icon(switch (controller.themeMode) {
               ThemeMode.light => Icons.light_mode_outlined,
@@ -108,12 +120,12 @@ class AppShell extends StatelessWidget {
                         NavigationRailDestination(
                           icon: Icon(Icons.home_outlined),
                           selectedIcon: Icon(Icons.home),
-                          label: Text('Dashboard'),
+                          label: Text(AppShellStrings.dashboard),
                         ),
                         NavigationRailDestination(
                           icon: Icon(Icons.radar_outlined),
                           selectedIcon: Icon(Icons.radar),
-                          label: Text('Scan'),
+                          label: Text(AppShellStrings.scan),
                         ),
                       ],
                     ),
@@ -132,12 +144,12 @@ class AppShell extends StatelessWidget {
                 NavigationDestination(
                   icon: Icon(Icons.home_outlined),
                   selectedIcon: Icon(Icons.home),
-                  label: 'Dashboard',
+                  label: AppShellStrings.dashboard,
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.radar_outlined),
                   selectedIcon: Icon(Icons.radar),
-                  label: 'Scan',
+                  label: AppShellStrings.scan,
                 ),
               ],
             )

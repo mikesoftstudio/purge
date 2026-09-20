@@ -6,16 +6,41 @@ import '../state/purge_controller.dart';
 import '../theme.dart';
 import '../widgets/confirm_dialog.dart';
 
+class CleanScreenStrings {
+  CleanScreenStrings._();
+
+  static const cleaningTitle = 'Cleaning your device';
+  static const working = 'Working through the selected items…';
+  static const allDone = 'All done.';
+  static const progress = 'Progress';
+  static const progressSemantic = 'Cleaning progress ';
+  static const stopCleaning = 'Stop cleaning';
+  static const stopCleaningTitle = 'Stop cleaning?';
+  static const stopDescription =
+      'Items already cleaned stay deleted. Anything still pending will be skipped.';
+  static const freed = ' freed';
+  static const skipped = 'skipped';
+  static const couldNotClean = 'could not clean';
+  static const cleaning = 'cleaning…';
+  static const upToPrefix = ' (up to ';
+  static const upToSuffix = ')';
+  static const pending = 'pending';
+  static const freedOf = ' freed of ≈ ';
+  static const soFar = ' so far';
+}
+
 class CleanScreen extends StatelessWidget {
   const CleanScreen({
     super.key,
     required this.controller,
     required this.ids,
+    required this.expectedBytes,
     required this.onStop,
   });
 
   final PurgeController controller;
   final List<String> ids;
+  final int expectedBytes;
   final VoidCallback onStop;
 
   String _nameOf(String id) {
@@ -28,18 +53,29 @@ class CleanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final events = controller.events;
-    final percent = ids.isEmpty ? 0 : ((events.length / ids.length) * 100).round().clamp(0, 100);
+    final done = controller.cleanDone;
+    final total = controller.cleanTotal;
+    final percent = total <= 0
+        ? (ids.isEmpty ? 0 : ((events.length / ids.length) * 100).round().clamp(0, 100))
+        : ((done / total) * 100).clamp(0, 100).round();
+    final freedSoFar = controller.summary != null
+        ? controller.summary!.totalFreedBytes
+        : events
+            .where((e) => e.status == 'done')
+            .fold<int>(0, (acc, e) => acc + finiteBytes(e.freedBytes ?? 0));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
       children: [
         Text(
-          'Cleaning your device',
+          CleanScreenStrings.cleaningTitle,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 6),
         Text(
-          controller.cleaning ? 'Working through the selected items…' : 'All done.',
+          controller.cleaning
+              ? CleanScreenStrings.working
+              : CleanScreenStrings.allDone,
           style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 20),
@@ -51,33 +87,45 @@ class CleanScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Text('Progress', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                    const Text(CleanScreenStrings.progress,
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                     const Spacer(),
                     Text('$percent%', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 LinearProgressIndicator(
-                  value: percent / 100,
+                  value: total <= 0 ? null : percent / 100,
                   minHeight: 10,
                   borderRadius: BorderRadius.circular(999),
                   color: purgeGreen,
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  semanticsLabel: '${CleanScreenStrings.progressSemantic}$percent%',
                 ),
+                if (expectedBytes > 0) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    '${formatBytes(freedSoFar)}${CleanScreenStrings.freedOf}${formatBytes(expectedBytes)}${controller.cleaning ? CleanScreenStrings.soFar : ''}',
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
                 if (controller.cleaning) ...[
                   const SizedBox(height: 12),
                   OutlinedButton(
                     onPressed: () async {
                       final ok = await showConfirmDialog(
                         context: context,
-                        title: 'Stop cleaning?',
-                        description:
-                            'Items already cleaned stay deleted. Anything still pending will be skipped.',
-                        confirmLabel: 'Stop cleaning',
+                        title: CleanScreenStrings.stopCleaningTitle,
+                        description: CleanScreenStrings.stopDescription,
+                        confirmLabel: CleanScreenStrings.stopCleaning,
                         destructive: true,
                       );
                       if (ok) onStop();
                     },
-                    child: const Text('Stop cleaning'),
+                    child: const Text(CleanScreenStrings.stopCleaning),
                   ),
                 ],
                 const SizedBox(height: 8),
@@ -121,19 +169,27 @@ class _CleanRow extends StatelessWidget {
     };
     final trailing = switch (status) {
       'done' => Text(
-          '${formatBytes(event?.freedBytes ?? 0)} freed',
+          '${formatBytes(event?.freedBytes ?? 0)}${CleanScreenStrings.freed}',
           style: const TextStyle(color: purgeGreen, fontWeight: FontWeight.w600),
         ),
       'skipped' => Text(
-          event?.label != null && event!.label != 'Cancelled' ? event!.label! : 'skipped',
+          event?.label != null && event!.label != 'Cancelled'
+              ? event!.label!
+              : CleanScreenStrings.skipped,
           style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
-      'error' => Text('could not clean', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+      'error' => Text(
+          CleanScreenStrings.couldNotClean,
+          style: TextStyle(color: Theme.of(context).colorScheme.error),
+        ),
       'cleaning' => Text(
-          'cleaning…${expected != null ? ' (up to ${formatBytes(expected!)})' : ''}',
+          '${CleanScreenStrings.cleaning}${expected != null ? '${CleanScreenStrings.upToPrefix}${formatBytes(expected!)}${CleanScreenStrings.upToSuffix}' : ''}',
           style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
-      _ => Text('pending', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+      _ => Text(
+          CleanScreenStrings.pending,
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+        ),
     };
 
     return Padding(

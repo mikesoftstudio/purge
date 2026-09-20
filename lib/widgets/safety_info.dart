@@ -1,27 +1,41 @@
 import 'package:flutter/material.dart';
 
 import '../engine/types.dart';
+import '../ui/strings.dart';
+
+class SafetyInfoStrings {
+  SafetyInfoStrings._();
+
+  static const toCleanTitle = ' to clean';
+  static const safeBody = 'Pure caches and Trash. Removed instantly, and rebuilt automatically '
+      'the next time you use your tools. Nothing personal is touched.';
+  static const moderateBody = 'Caches that involve a slower one-time rebuild after cleaning — for '
+      'example Flutter engine artifacts or old iOS device support files.';
+  static const advancedBody = 'Heavy, regenerable items such as Docker images and containers. '
+      'After cleaning they must be re-pulled or rebuilt before you can '
+      'use them again.';
+  static const reassurance =
+      'Every item is regenerable — your projects, source and '
+      'personal files are never touched.';
+  static const gotIt = 'Got it';
+}
 
 Future<void> showSafetyTierInfo(BuildContext context, SafetyTier tier) async {
   final (icon, title, body) = switch (tier) {
     SafetyTier.safe => (
         Icons.verified_outlined,
-        'Safe',
-        'Pure caches and Trash. Removed instantly, and rebuilt automatically '
-            'the next time you use your tools. Nothing personal is touched.',
+        Strings.safe,
+        SafetyInfoStrings.safeBody,
       ),
     SafetyTier.moderate => (
         Icons.warning_amber_rounded,
-        'Moderate',
-        'Caches that involve a slower one-time rebuild after cleaning — for '
-            'example Flutter engine artifacts or old iOS device support files.',
+        Strings.moderate,
+        SafetyInfoStrings.moderateBody,
       ),
     SafetyTier.advanced => (
         Icons.construction,
-        'Advanced',
-        'Heavy, regenerable items such as Docker images and containers. '
-            'After cleaning they must be re-pulled or rebuilt before you can '
-            'use them again.',
+        Strings.advanced,
+        SafetyInfoStrings.advancedBody,
       ),
   };
 
@@ -45,7 +59,7 @@ Future<void> showSafetyTierInfo(BuildContext context, SafetyTier tier) async {
           ),
       };
       return AlertDialog(
-        title: Text('$title to clean'),
+        title: Text('$title${SafetyInfoStrings.toCleanTitle}'),
         content: SizedBox(
           width: 400,
           child: Row(
@@ -73,8 +87,7 @@ Future<void> showSafetyTierInfo(BuildContext context, SafetyTier tier) async {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'Every item is regenerable — your projects, source and '
-                      'personal files are never touched.',
+                      SafetyInfoStrings.reassurance,
                       style: TextStyle(
                         color: scheme.onSurfaceVariant,
                         fontSize: 12,
@@ -90,7 +103,7 @@ Future<void> showSafetyTierInfo(BuildContext context, SafetyTier tier) async {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Got it'),
+            child: const Text(SafetyInfoStrings.gotIt),
           ),
         ],
       );

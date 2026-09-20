@@ -7,6 +7,20 @@ import '../state/purge_controller.dart';
 import '../theme.dart';
 import '../widgets/safety_badge.dart';
 
+class SummaryScreenStrings {
+  SummaryScreenStrings._();
+
+  static const freed = ' freed';
+  static const roomMessage =
+      'Your device has more room. Everything that was cleaned regenerates on next use.';
+  static const whatHappened = 'What happened';
+  static const skippedDuringClean = 'skipped during clean job';
+  static const erroredPrefix =
+      ' item(s) could not be cleaned — you can retry them from the scan page.';
+  static const scanAgain = 'Scan again';
+  static const backToDashboard = 'Back to dashboard';
+}
+
 class SummaryScreen extends StatelessWidget {
   const SummaryScreen({
     super.key,
@@ -34,7 +48,7 @@ class SummaryScreen extends StatelessWidget {
                 text: formatBytes(summary?.totalFreedBytes ?? 0),
                 style: const TextStyle(color: purgeGreen, fontWeight: FontWeight.bold),
               ),
-              const TextSpan(text: ' freed'),
+              const TextSpan(text: SummaryScreenStrings.freed),
             ],
           ),
           textAlign: TextAlign.center,
@@ -42,7 +56,7 @@ class SummaryScreen extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Your device has more room. Everything that was cleaned regenerates on next use.',
+          SummaryScreenStrings.roomMessage,
           textAlign: TextAlign.center,
           style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
         ),
@@ -55,7 +69,8 @@ class SummaryScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('What happened', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  Text(SummaryScreenStrings.whatHappened,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 12),
                   for (final id in summary.cleaned)
                     ListTile(
@@ -70,7 +85,7 @@ class SummaryScreen extends StatelessWidget {
                       leading: Icon(Icons.circle, size: 10, color: Theme.of(context).colorScheme.outline),
                       title: Text(getCategory(id)?.name ?? id),
                       trailing: Text(
-                        'skipped during clean job',
+                        SummaryScreenStrings.skippedDuringClean,
                         style: TextStyle(
                           fontSize: 12,
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -81,7 +96,7 @@ class SummaryScreen extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Text(
-                        '${summary.errored.length} item(s) could not be cleaned — you can retry them from the scan page.',
+                        '${summary.errored.length}${SummaryScreenStrings.erroredPrefix}',
                         style: TextStyle(color: Theme.of(context).colorScheme.error),
                       ),
                     ),
@@ -95,8 +110,10 @@ class SummaryScreen extends StatelessWidget {
           alignment: WrapAlignment.center,
           spacing: 12,
           children: [
-            FilledButton(onPressed: onScanAgain, child: const Text('Scan again')),
-            OutlinedButton(onPressed: onHome, child: const Text('Back to dashboard')),
+            FilledButton(
+                onPressed: onScanAgain, child: const Text(SummaryScreenStrings.scanAgain)),
+            OutlinedButton(
+                onPressed: onHome, child: const Text(SummaryScreenStrings.backToDashboard)),
           ],
         ),
       ],

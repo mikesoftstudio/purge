@@ -5,6 +5,19 @@ import 'package:flutter/material.dart';
 import '../engine/bytes.dart';
 import '../engine/types.dart';
 import '../theme.dart';
+import '../ui/strings.dart';
+
+class DiskOverviewStrings {
+  DiskOverviewStrings._();
+
+  static const used = 'Used';
+  static const reclaimable = 'Reclaimable';
+  static const free = 'Free';
+  static const usedLower = 'used';
+  static const freeSpace = 'Free space';
+  static const reclaimSuffix = ' of it is safe to reclaim';
+  static const home = 'Home';
+}
 
 class DiskOverview extends StatelessWidget {
   const DiskOverview({super.key, required this.disk, this.reclaimableBytes});
@@ -35,7 +48,7 @@ class DiskOverview extends StatelessWidget {
           children: [
             _Metric(
               color: purgeGreen,
-              label: 'Used',
+              label: DiskOverviewStrings.used,
               value: formatBytes(disk.usedBytes),
               muted: muted,
             ),
@@ -43,7 +56,7 @@ class DiskOverview extends StatelessWidget {
             if (showReclaim) ...[
               _Metric(
                 color: purgeAmber,
-                label: 'Reclaimable',
+                label: DiskOverviewStrings.reclaimable,
                 value: formatBytes(reclaimableBytes!),
                 muted: muted,
                 highlight: true,
@@ -52,7 +65,7 @@ class DiskOverview extends StatelessWidget {
             ],
             _Metric(
               color: scheme.surfaceContainerHighest,
-              label: 'Free',
+              label: DiskOverviewStrings.free,
               value: formatBytes(disk.freeBytes),
               muted: muted,
               large: true,
@@ -84,7 +97,7 @@ class DiskOverview extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'used',
+                    DiskOverviewStrings.usedLower,
                     style: TextStyle(fontSize: 12, color: muted),
                   ),
                 ],
@@ -104,7 +117,7 @@ class DiskOverview extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Free space',
+                        DiskOverviewStrings.freeSpace,
                         style: TextStyle(color: muted, fontSize: 13),
                       ),
                       const SizedBox(height: 2),
@@ -120,7 +133,7 @@ class DiskOverview extends StatelessWidget {
                       const SizedBox(height: 6),
                       if (showReclaim)
                         Text(
-                          '${formatBytes(reclaimableBytes!)} of it is safe to reclaim',
+                          '${formatBytes(reclaimableBytes!)}${DiskOverviewStrings.reclaimSuffix}',
                           style: TextStyle(
                             color: purgeAmber,
                             fontWeight: FontWeight.w600,
@@ -160,7 +173,7 @@ class DiskOverview extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            'Home',
+                            DiskOverviewStrings.home,
                             style: TextStyle(color: muted, fontSize: 11),
                           ),
                           const SizedBox(height: 4),
@@ -170,7 +183,7 @@ class DiskOverview extends StatelessWidget {
                             style: TextStyle(
                               color: muted,
                               fontSize: 11,
-                              fontFamily: 'monospace',
+                              fontFamily: Strings.monospace,
                             ),
                           ),
                         ],

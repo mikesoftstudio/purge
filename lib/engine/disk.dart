@@ -173,3 +173,46 @@ Future<bool> requestStorageAccess() async {
     return false;
   }
 }
+
+Future<bool> isStorageAccessGranted() async {
+  if (!Platform.isAndroid) return true;
+  try {
+    final ok =
+        await diskChannel.invokeMethod<bool>('isExternalStorageManager');
+    return ok ?? false;
+  } catch (_) {
+    return false;
+  }
+}
+
+Future<Map<String, Object>> getDeviceInfo() async {
+  if (!Platform.isAndroid && !Platform.isIOS) return const {};
+  try {
+    final raw = await diskChannel
+        .invokeMethod<Map<dynamic, dynamic>>('getDeviceInfo');
+    if (raw == null) return const {};
+    return raw.map((k, v) => MapEntry(k.toString(), v as Object));
+  } catch (_) {
+    return const {};
+  }
+}
+
+Future<Map<String, Object>> listExternalCacheDirs() async {
+  if (!Platform.isAndroid) return const {};
+  try {
+    final raw = await diskChannel.invokeMethod('listExternalCacheDirs');
+    if (raw is Map) {
+      final dirs = raw['dirs'] is List
+          ? (raw['dirs'] as List).map((e) => e.toString()).toList()
+          : <String>[];
+      final packages = (raw['packages'] as num?)?.toInt() ?? 0;
+      return {'dirs': dirs, 'packages': packages};
+    }
+    if (raw is List) {
+      return {'dirs': raw.map((e) => e.toString()).toList(), 'packages': 0};
+    }
+    return const {};
+  } catch (_) {
+    return const {};
+  }
+}

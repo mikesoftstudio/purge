@@ -3,8 +3,23 @@ import 'package:flutter/material.dart';
 import '../engine/bytes.dart';
 import '../engine/types.dart';
 import '../theme.dart';
+import '../ui/strings.dart';
 import 'safety_badge.dart';
 import 'safety_info.dart';
+
+class CategoryCardStrings {
+  CategoryCardStrings._();
+
+  static const detailsFor = 'Details for ';
+  static const details = 'Details';
+  static const select = 'Select';
+  static const deselect = 'Deselect';
+  static const needs = 'needs ';
+  static const notAvailable = 'not available on this device';
+  static const nothingToClean = 'nothing to clean';
+  static const locationSingular = ' location';
+  static const locationPlural = ' locations';
+}
 
 enum _MenuAction { details, select, safety }
 
@@ -33,6 +48,7 @@ IconData categoryIcon(String id) {
     'dotnet-nuget' => Icons.view_module_outlined,
     'chocolatey-cache' => Icons.bakery_dining_outlined,
     'scoop-cache' => Icons.icecream_outlined,
+    'large-files' => Icons.insert_drive_file_outlined,
     _ => Icons.folder_outlined,
   };
 }
@@ -154,9 +170,11 @@ class CategoryCard extends StatelessWidget {
                           ),
                         ),
                         const Spacer(),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: _statusLabel(result, scheme),
+                        Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: _statusLabel(result, scheme),
+                          ),
                         ),
                       ],
                     ),
@@ -189,7 +207,7 @@ class CategoryCard extends StatelessWidget {
                         ),
                         IconButton(
                           onPressed: onDetails,
-                          tooltip: 'Details for ${result.name}',
+                          tooltip: '${CategoryCardStrings.detailsFor}${result.name}',
                           visualDensity: VisualDensity.compact,
                           style: IconButton.styleFrom(
                             minimumSize: const Size(32, 28),
@@ -246,14 +264,14 @@ class CategoryCard extends StatelessWidget {
       items: [
         PopupMenuItem(
           value: _MenuAction.details,
-          child: _MenuItem(icon: Icons.info_outline, label: 'Details'),
+          child: _MenuItem(icon: Icons.info_outline, label: CategoryCardStrings.details),
         ),
         if (!disabled)
           PopupMenuItem(
             value: _MenuAction.select,
             child: _MenuItem(
               icon: selected ? Icons.check_box_outlined : Icons.check_box_outline_blank,
-              label: selected ? 'Deselect' : 'Select',
+              label: selected ? CategoryCardStrings.deselect : CategoryCardStrings.select,
             ),
           ),
         PopupMenuItem(
@@ -281,32 +299,40 @@ class CategoryCard extends StatelessWidget {
   }
 
   String _tierLabel(SafetyTier tier) => switch (tier) {
-        SafetyTier.safe => 'Safe',
-        SafetyTier.moderate => 'Moderate',
-        SafetyTier.advanced => 'Advanced',
+        SafetyTier.safe => Strings.safe,
+        SafetyTier.moderate => Strings.moderate,
+        SafetyTier.advanced => Strings.advanced,
       };
 
   Widget _statusLabel(ScanResult result, ColorScheme scheme) {
     if (result.toolMissing) {
       return Text(
-        'needs ${result.category.toolRequirement}',
+        '${CategoryCardStrings.needs}${result.category.toolRequirement}',
         style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11.5),
       );
     }
     if (!result.applicable) {
       return Text(
-        'not available on this device',
+        CategoryCardStrings.notAvailable,
         style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11.5),
+      );
+    }
+    if (!result.detected && result.scanHint != null) {
+      return Text(
+        result.scanHint!,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: Colors.amber.shade700, fontSize: 11.5),
       );
     }
     if (!result.detected) {
       return Text(
-        'nothing to clean',
+        CategoryCardStrings.nothingToClean,
         style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11.5),
       );
     }
     return Text(
-      '${result.paths.length} location${result.paths.length == 1 ? '' : 's'}',
+      '${result.paths.length}${result.paths.length == 1 ? CategoryCardStrings.locationSingular : CategoryCardStrings.locationPlural}',
       style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11.5),
     );
   }

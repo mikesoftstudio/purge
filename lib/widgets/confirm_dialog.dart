@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../ui/strings.dart';
+
 Future<bool> showConfirmDialog({
   required BuildContext context,
   required String title,
   String? description,
-  String confirmLabel = 'Confirm',
-  String cancelLabel = 'Cancel',
+  String confirmLabel = Strings.confirm,
+  String cancelLabel = Strings.cancel,
   bool destructive = false,
   bool hideCancel = false,
   bool confirmDisabled = false,
